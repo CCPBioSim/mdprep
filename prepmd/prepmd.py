@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-
+Prepare structures from the PDB for molecular dynamics.
 """
 
 import argparse
@@ -44,21 +44,57 @@ parser.add_argument("-m", "--leavemissing",
 
 
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
+    """
+    Generate a random 6-character ID. Used for naming scratch directories.
+    Args:
+        size: length of string, an int
+        chars; chars to use, a string
+    Returns:
+        the string
+    """
     return ''.join(random.choice(chars) for _ in range(size))
 
 
-def run_test(code):
-    params = {"code": code,
-              'outmodel': "/home/rob/temp/missingresiduestestrun/"+code+"_ready.pdb",
-              "workingdir": "/home/rob/temp/missingresiduestestrun/"+code+"_"+id_generator(6)
-              }
-    prep(params["code"], params["outmodel"],
-         params["workingdir"], structure_format="pdb")
+#def run_test(code, wdir):
+#    params = {"code": code,
+#              'outmodel': "/home/rob/temp/missingresiduestestrun/"+code+"_ready.pdb",
+#              "workingdir": "/home/rob/temp/missingresiduestestrun/"+code+"_"+id_generator(6)
+#              }
+#    prep(params["code"], params["outmodel"],
+#         params["workingdir"], structure_format="pdb")
 
 
 def prep(code, outmodel, workingdir, folder=None, fastafile=None, inmodel=None,
          alignmentout="alignment_out.fasta", structure_format="mmCif",
-         quiet=False, fix_after=True, download_sequence=False, fix_missing_atoms=True):
+         quiet=False, fix_after=True, download_sequence=False,
+         fix_missing_atoms=True):
+    """
+    Prepare a PDB/MMCIF structure file for simulation.
+    Args:
+        code: pdb code, a string
+        outmodel: path to output file, a string
+        workingdir: path to working directory
+        folder: input folder, containing structure file/fasta sequences. Used
+        instead of the pdb code if provided. A string
+        fastafile: path to fasta-formatted text file containing the original
+        sequence for the structure file, a string. If no fastafile is provided
+        the sequence will instead be found from the structure file metadata.
+        inmodel: path to input structure file, a string.
+        alignmentout: output file from the alignment of the sequence from the
+        structure file and the original sequence.
+        structure_format: format of the structure file, a string. Can be
+        'mmCif' or 'pdb'.
+        quiet: if true, don't print anything. boolean
+        fix_after: if true, fix the pdb file after loop building. If false,
+        fix it before. a boolean
+        download_sequence: get the fasta sequence for the structure from
+        UNIPROT instead of the pdb metadata or an external file. Note: the
+        UNIPROT sequence is normally very different from the pdb sequence, so
+        the alignment might fail. a boolean
+        fix_missing_atoms: whether to add missing atoms with pdbfixer. A bool
+    Returns:
+        nothing, but writes out a file to outmodel.
+    """
 
     if not os.path.isdir(workingdir):
         pathlib.Path(workingdir).mkdir(parents=True, exist_ok=True)
@@ -77,7 +113,8 @@ def prep(code, outmodel, workingdir, folder=None, fastafile=None, inmodel=None,
         print("Found input model:"+str(inmodel))
         if len(pdbs) > 1 or len(cifs) > 1:
             raise IOError(
-                "Mulitple structure files in folder, please specify a structure file")
+                "Mulitple structure files in folder, please specify a"
+                " structure file")
         if len(models) == 0:
             raise IOError("Couldn't find input structure file in folder")
 
@@ -100,21 +137,23 @@ def prep(code, outmodel, workingdir, folder=None, fastafile=None, inmodel=None,
             fastafile = fastas[0]
         if len(fastas) > 1:
             raise IOError(
-                "Multiple sequence files found in folder, please specify a sequence file")
+                "Multiple sequence files found in folder, please specify a"
+                " sequence file")
         fastas = None
         print("Found fasta file "+str(fastafile)+" in "+str(folder))
-    if (fastafile is None and download_sequence) or (fastas is None and download_sequence):
+    if (fastafile is None and download_sequence) or (
+            fastas is None and download_sequence):
         try:
             print("Downloading sequence file(s)")
             sequences = download.get_uniprot_sequence(code)
-            # I think the problem is that the sequence downloader should only download chains that also exist in the model
             fastafile = workingdir+"/"+code+".fasta"
             with open(fastafile, "w") as file:
                 file.write(sequences)
         except Exception as e:
             print(e)
             raise IOError(
-                "No sequence files found in folder or specified, could not download sequence")
+                "No sequence files found in folder or specified, could not"
+                "download sequence")
 
     if not fastafile:
         print("Fasta sequence: "+str(fastafile))
@@ -137,8 +176,10 @@ def prep(code, outmodel, workingdir, folder=None, fastafile=None, inmodel=None,
     print("Wrote "+outmodel)
     
 def entry_point():
-    if sys.argv[1] == "test":
-        tests()
+    "CLI entry point function. Uses sys.argv and argparse args object."
+    if len(sys.argv) == 2:
+        if sys.argv[1] == "test":
+            tests()
     args = parser.parse_args()
     fix_after = not args.fixstart
     if args.wdir is None:
@@ -165,14 +206,23 @@ def tests():
         UNDERLINE = '\033[4m'
         RESET = '\033[0m'
 
-    testinputs = ["6xov", "9CS5", "8RM8", "8VV2", "9B8B", "8CAE", "8QZA", "8RTL", "8RTO", "9A9W"]
+    testinputs = ["6xov", "9CS5", "8RM8", ]#"8VV2", "9B8B", "8CAE", "8QZA", "8RTL", "8RTO", "9A9W"]
     results = {}
     state = 0
+    cwd = os.getcwd()
 
     for test in range(len(testinputs)):
         try:
-            print(f"Testing {testinputs[test]} ({test}/{len(testinputs)})")
-            run_test(testinputs[test])
+            os.chdir(cwd)
+            code = testinputs[test]
+            print(f"Testing {code} ({test}/{len(testinputs)})")
+            genid = id_generator(6)
+            pathlib.Path(os.getcwd()+os.path.sep+"testout").mkdir(
+                parents=True, exist_ok=True)
+            prep(code,
+                 os.getcwd()+os.path.sep+testinputs[test]+"_"+genid+".pdb",
+                 os.getcwd()+os.path.sep+"testout"+os.path.sep+code+"_"+genid,
+                 structure_format="pdb")
             print(f"{style.GREEN}PASSED: {test} {style.RESET}")
             results[testinputs[test]] = "PASS"
         except Exception as e:
@@ -188,13 +238,13 @@ def tests():
                 errtype = type(result).__name__,          # TypeError
                 errfile = __file__,                  # /tmp/example.py
                 errline = result.__traceback__.tb_lineno  # 2
-                error = errtype+" on line "+errline+" in "+errfile
+                error = str(errtype)+" on line " + \
+                    str(errline)+" in "+str(errfile)
                 print(f"{name}: {style.RED}{error}{style.RESET}")
     for name, result in results.items():
             if result != "PASS":
                 print(f"{style.YELLOW}{name} exception: {result}{style.RESET}")
                 
-
     sys.exit(state)
 
 

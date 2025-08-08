@@ -1,27 +1,49 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-
+Download data from the PDB and UNIPROT
 """
 
-from Bio.PDB import PDBList
+#from Bio.PDB import PDBList
 import urllib.request
 from os.path import sep
 import requests
 
 
 def get_structure(pdb_id, directory, file_format="mmCif"):
+    """
+    Download a structure from the PDB.
+    Args:
+        pdb_id: id of the pdb to download, a string
+        directory: directory to download the file into, a string
+        file_format: mmCif or pdb, a string
+    returns:
+        path to the downloaded file.
+    """
     if file_format == "mmCif":
         format_str = "cif"
     if file_format == "pdb":
         format_str = "pdb"
     urllib.request.urlretrieve("https://files.rcsb.org/download/" +
-                               pdb_id+"."+format_str, directory+sep+pdb_id+"."+format_str)
+                               pdb_id+"."+format_str, directory+sep+pdb_id +
+                               "."+format_str)
     return directory+sep+pdb_id+"."+format_str
 
 
 def get_uniprot_sequence(pdb_id, merge_sequence=True, write_to_file=None,
                          verbose=False):
+    """
+    For a given pdb id, find the fasta sequence for all chains from UNIPROT.
+    Args:
+        pdb_id: the id of the pdb, a string
+        merge_sequence: whether to merge the sequences together into a single
+        fasta file, a bool
+        write_to_file: path of file to write to, a string
+        verbose: a bool, whether to write debug info out
+    Returns:
+        the fasta sequences as a dictionry keyed by pdb id, or a string
+        with the fasta sequence.
+    """
     query = '''{
       entries(entry_ids:["'''+pdb_id+'''"]){
         polymer_entities {

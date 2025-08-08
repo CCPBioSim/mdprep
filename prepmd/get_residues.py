@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-
+Read residue information from structure files
 """
 
 from prepmd import util
@@ -9,6 +9,14 @@ from modeller import *
 
 
 def get_residues_pdb(pdb, code):
+    """
+    Get the fasta sequence of residues in the ATOM entries of a PDB file.
+    Args:
+        pdb: path to pdb file, a string
+        code: PDB code
+    Returns:
+        the fasta sequence as a string
+    """
     log.none()
     e = Environ()
     m = Model(e, file=pdb)
@@ -21,6 +29,14 @@ def get_residues_pdb(pdb, code):
 
 
 def get_fullseq_pdb(pdb, code):
+    """
+    Get the fasta sequence of residues in the SEQRES records of a PDB file.
+    Args:
+        pdb: path to pdb file, a string
+        code: PDB code
+    Returns:
+        the fasta sequence as a string
+    """
     seqres = {}
     with open(pdb) as file:
         for line in file:
@@ -42,7 +58,8 @@ def get_fullseq_pdb(pdb, code):
     chains = ":::::::::"
     return ">P1;"+code+"_fill\n"+chains+"\n"+fasta_joined+"*"
 
-
+# DEPRECATED
+"""
 def get_residues_pdb_old(pdb, with_missing=True, ignore_mutants=True):
     with open(pdb) as file:
         seqres = {}
@@ -139,7 +156,8 @@ def get_chains(model):
                 chain = line.split[4]
                 if chain not in chains:
                     chains.append(chain)
-
+    return chains
+"""
 
 # sarah says to ask rene about this
 # did adam hospital do something like this???

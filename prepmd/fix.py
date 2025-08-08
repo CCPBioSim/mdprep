@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-
+Fix structures using PDBFixer
 """
 
 from pdbfixer import PDBFixer
@@ -10,6 +10,17 @@ from openmm.app import PDBFile
 def fix(pdb, out, fix_nonstandard_residues=True, fix_missing_atoms=False,
         add_missing_hydrogens=7.0, remove_heterogens=True,
         fix_missing_hydrogens=True):
+    """
+    Use PDBFixer to fix a PDB (or mmCif) structure file.
+    Args:
+        pdb: input file path, a string
+        out: output file path, a string
+        fix_nonstandard_residues: whether to fix nonstandard residues, a bool
+        fix_misisng_atoms: whether to restore missing atoms, a bool
+        add_missing_hydrogens: desired pH, a float
+        remove_heterogens: whether to remove heterogens from the file, a bool
+        fix_missing_hydrogens: whether to add missing hydrogens, a bool
+    """
     fixer = PDBFixer(filename=pdb)
     if fix_nonstandard_residues:
         print("Fixing nonstandard residues...")
@@ -28,6 +39,15 @@ def fix(pdb, out, fix_nonstandard_residues=True, fix_missing_atoms=False,
     PDBFile.writeFile(fixer.topology, fixer.positions, open(out, 'w'))
     
 def restore_metadata_pdb(pdb, fixed_pdb):
+    """
+    Copy metadata from one pdb file to another. Useful as the output of
+    pdbfixer and other tools often doesn't contain REMARKS and such.
+    Args:
+        pdb: original pdb file path containing metadata, a string
+        fixed_pdb: new pdb file path, containing no metadata, a string
+    Returns:
+        nothing, but updates the contents of fixed_pdb
+    """
     lines = []
     with open(pdb) as pdb:
         for line in pdb:

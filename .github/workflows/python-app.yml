@@ -1,0 +1,37 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: prepmd CI
+
+env:
+  KEY_MODELLER: MODELIRANJE
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  tests:
+    name: tests
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows-latest, macos-latest, ubuntu-latest]
+        python-version: ['3.13']
+
+    runs-on: $${{ matrix.platform }}
+
+    steps:
+    - uses: conda-incubator/setup-miniconda@v3
+      with:
+        miniconda-version: "latest"
+
+    - name: tests
+      run: |
+        conda env create -f environment.yml
+        conda activate prep
+        conda install pytest
+        pytest

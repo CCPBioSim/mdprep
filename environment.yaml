@@ -11,3 +11,4 @@ dependencies:
   - pdbfixer=1.11
   - modeller=10.7
   - biopython=1.85
+  - pytest=8.4.2

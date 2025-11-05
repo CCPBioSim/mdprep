@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-
+Calls to the MODELLER API
 """
 import modeller
 from Bio import Align
@@ -109,7 +109,7 @@ def get_best_pdb(directory, exts=["pdb", "cif", "mmcif", "mmCif"]):
     for pdb in pdbs:
         with open(pdb, "r") as file:
             for line in file:
-                #pdb
+                # pdb
                 if "OBJECTIVE FUNCTION" in line:
                     score = line.split(" ")[-1]
                     scores[pdb] = float(score)
@@ -119,17 +119,6 @@ def get_best_pdb(directory, exts=["pdb", "cif", "mmcif", "mmCif"]):
                     scores[pdb] = float(score)
     return str(max(scores, key=scores.get))
 
-# Deprecated, will be removed
-"""
-def fix_missing_atoms(inmodel, outmodel, mdlformat="MMCIF"):
-    env = modeller.Environ()
-    env.libs.topology.read(file='$(LIB)/top_heav.lib')
-    env.libs.parameters.read(file='$(LIB)/par.lib')
-
-    mdl = modeller.scripts.complete_pdb(env, inmodel)
-
-    mdl.write(outmodel, mdlformat)
-"""
 
 # note: the pdb file isn't a parameter, it must be called code.pdb
 def fix_missing_residues(code, fastafile, alignmentout, inmodel, outmodel,
@@ -160,7 +149,7 @@ def fix_missing_residues(code, fastafile, alignmentout, inmodel, outmodel,
     pdb_dirs = ['.', '../atom_files']
 
     modeller.log.none()
-    
+
     if fastafile:
         env = modeller.Environ()
         model = modeller.Model(env, file=inmodel)
@@ -215,30 +204,14 @@ def fix_missing_residues(code, fastafile, alignmentout, inmodel, outmodel,
     a = automodel(env, alnfile=alignmentout,
                   knowns=code, sequence=code+"_fill")
     a.auto_align()
-    
+
     if ".mmCif" in inmodel or ".cif" in inmodel or "Cif" in inmodel:
         a.set_output_model_format("MMCIF")
-    
+
     a.make()
-    
+
     sys.stdout = old_stdout
     print("Finished modelling missing loops.")
 
     best_pdb = get_best_pdb(wdir)
     shutil.copy2(best_pdb, outmodel)
-
-
-# todo: option for rosetta? https://blog.matteoferla.com/2020/07/filling-missing-loops-proper-way.html
-# todo: option for alphafold??? https://blog.matteoferla.com/2021/10/filling-missing-loops-by-cannibalising.html
-
-# fill missing residues
-# https://salilab.org/modeller/wiki/Missing_residues
-
-# refine loops
-# https://salilab.org/modeller/manual/node34.html
-
-# autodock for ligand binding - no search tools , do a positional search, give it a coordinate set
-# add data provinence to this
-# validation tools
-# set up default simulation
-# comparison between different setups

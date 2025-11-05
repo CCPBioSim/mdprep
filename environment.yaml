@@ -9,6 +9,5 @@ dependencies:
   - requests
   - openmm=8.2.0
   - pdbfixer=1.11
-  - gemmi=0.7.1
   - modeller=10.7
   - biopython=1.85

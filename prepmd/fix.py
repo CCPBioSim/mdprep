@@ -9,6 +9,10 @@ from openmm.app import PDBFile, PDBxFile
 
 
 def fix_nonstandard_cif(cif):
+    """
+    Removed metadata written by MODELLER to cif files, which can prevent those
+    files from being read by other software.
+    """
     blocks = []
     curr_block = []
     with open(cif) as file:
@@ -27,13 +31,13 @@ def fix_nonstandard_cif(cif):
                 modeller_block = True
         if not modeller_block:
             fixed_blocks.append(block)
-    
+
     outtext = ""
     for block in fixed_blocks:
         outtext += "".join(block)
-    
+
     with open(cif, "w") as file:
-        file.writelines(outtext)     
+        file.writelines(outtext)
 
 
 def fix(pdb, out, fix_nonstandard_residues=True, fix_missing_atoms=False,
@@ -66,12 +70,13 @@ def fix(pdb, out, fix_nonstandard_residues=True, fix_missing_atoms=False,
         fixer.addMissingAtoms()
     if fix_missing_hydrogens:
         print("Adding missing hydrogens...")
-        fixer.addMissingHydrogens(add_missing_hydrogens) #pH
+        fixer.addMissingHydrogens(add_missing_hydrogens)  # pH
     if ".cif" in pdb or ".mmcif" in pdb:
         PDBxFile.writeFile(fixer.topology, fixer.positions, open(out, 'w'))
     else:
         PDBFile.writeFile(fixer.topology, fixer.positions, open(out, 'w'))
-    
+
+
 def restore_metadata_pdb(pdb, fixed_pdb):
     """
     Copy metadata from one pdb file to another. Useful as the output of
@@ -93,4 +98,3 @@ def restore_metadata_pdb(pdb, fixed_pdb):
             lines.append(line)
     with open(fixed_pdb, "w") as file:
         file.writelines(lines)
-            

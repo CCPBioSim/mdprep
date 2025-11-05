@@ -5,4 +5,4 @@ from . import get_residues
 from . import util
 from . import prep
 from . import model
-__version__ = "0.1"
+__version__ = "0.2"

@@ -4,7 +4,6 @@
 Download data from the PDB and UNIPROT
 """
 
-#from Bio.PDB import PDBList
 import urllib.request
 from os.path import sep
 import requests
@@ -20,7 +19,7 @@ def get_structure(pdb_id, directory, file_format="mmCif"):
     returns:
         path to the downloaded file.
     """
-    
+
     if file_format == "mmCif" or file_format == "cif":
         format_str = "cif"
     if file_format == "pdb":
@@ -32,7 +31,8 @@ def get_structure(pdb_id, directory, file_format="mmCif"):
     except urllib.error.HTTPError as e:
         r = requests.get(url.replace(".pdb", ".cif"))
         if r.status_code == 200:
-            msg = "No PDB for "+pdb_id+" exists (but an mmcif structure does). "
+            msg = "No PDB for "+pdb_id + \
+                " exists (but an mmcif structure does). "
             "Run with --fmt cif to use it."
             raise IOError(msg)
         else:
